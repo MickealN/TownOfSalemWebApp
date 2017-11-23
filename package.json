@@ -1,0 +1,9 @@
+{
+  "name": "Town-of-Salem-WebApp",
+  "version": "0.1",
+  "description": "A simple implementation of the Town of Salem night phase in javascript",
+  "dependencies": {
+    "express": "^4.15.2",
+	"socket.io": "^1.7.3"  
+  }
+}

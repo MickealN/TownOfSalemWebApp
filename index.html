@@ -10,30 +10,38 @@
 	<script src="js/game.js" type="text/javascript"></script>
 	<!--script src="js/main.js" type="text/javascript"></script-->
 	<script src="js/client.js" type="text/javascript"></script>
-    <div id='modtools' style="display:none">
+    <div id='modtools'> <!--style="display:none"-->
 		<button onclick="Client.startGame()">Start Game</button>
 		<button onclick="Client.startDay()">Start Day Cycle</button>
 		<button onclick="Client.startNight()">Start Night Cycle</button>
+		<button onclick="Client.report()">Status Report</button>
+		<br>
 	</div>
 	
 	<div id='game'>
 	
-	<div id="startScreen">
-		<div id="playerData">
-			Name: <input type="text" id="playerName">
-			<select id="playerRole">
-			<option value="townie">Townie</option>
-			<option value="werewolf">Werewolf</option>
-			</select>
+		<div id="startScreen">
+			<div id="playerData">
+				Name: <input type="text" id="playerName">
+				<select id="playerRole">
+				<option value="townie">Townie</option>
+				<option value="werewolf">Werewolf</option>
+				</select>
+			</div>
+			<button onclick="Client.askNewPlayer()">Submit</button>
 		</div>
-		<button onclick="Client.askNewPlayer()">Submit</button>
-	</div>
-	
-	
-	
-	<div id="playerList">
-	Player List:<br>
-	</div>
+		
+		
+		
+		<div id="playerList"></div>
+
+		<div id="nightTable"></div>
+		
+		<div id="dayTable"></div>
+		<div id="messageField">durr</div>
+
+
+
 
 	</div>
 	

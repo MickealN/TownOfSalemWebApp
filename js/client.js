@@ -31,12 +31,16 @@ Client.targetPlayer = function(aggroId, victimId){
 	Client.socket.emit('targetplayer', aggroId, victimId);
 };
 
+//This function is an entire fucking hazzard in itself. Really? Checking to if the player has
+//already voted client side? God damn you're lazy Mickeal. It's a good thing this is only 
+//for personal use.
 Client.voteAgainst = function(voterId, victimId){
 	if(alreadyVotedFor == -1){
 		Client.socket.emit('voteagainst', voterId, victimId, 1);
 		Client.socket.emit('messagebroadcast', currentTable[voterId].name + "  voted against "
-		+ currentTable[victimId].name+"!");
+			+ currentTable[victimId].name+"!");
 		alreadyVotedFor = victimId;
+		
 	} else if(alreadyVotedFor == victimId) {
 		Client.socket.emit('voteagainst', voterId, alreadyVotedFor, -1);
 		Client.socket.emit('messagebroadcast', currentTable[voterId].name + " cancelled their vote!");
@@ -45,7 +49,7 @@ Client.voteAgainst = function(voterId, victimId){
 		Client.socket.emit('voteagainst', voterId, alreadyVotedFor, -1);
 		Client.socket.emit('voteagainst', voterId, victimId, 1);
 		Client.socket.emit('messagebroadcast', currentTable[voterId].name + "  changed their vote to "
-		+ currentTable[victimId].name+"!");
+			+ currentTable[victimId].name+"!");
 		alreadyVotedFor = victimId;
 	}
 };
@@ -91,7 +95,7 @@ Client.socket.on('allplayers', function(data, id){
 		myId = id;
 	}
 	totalPlayers = data.length;
-	document.getElementById("playerList").innerHTML="";
+	document.getElementById("playerList").innerHTML="Player List:<br>";
 	for(i = 0; i < data.length; i++){
 		document.getElementById("playerList").innerHTML += data[i].name + "<br>";
 	}
@@ -104,17 +108,21 @@ Client.socket.on('gamealreadystarted', function(data){
 	//Set up observer tools later.
 });
 
+Client.socket.on('gamestart', function(data){
+	document.getElementById("playerList").style.display = "none";
+});
+
 //Edit the screen to show the live players and the night action table
 //Notes: That tabletext line is so hacky is makes me uncomfortable
 //Input: playerList Array
 //		{id, role, name, alive:boolean}
 Client.socket.on('sendnighttable', function(data){
 	
-	var tableText = "<table>";
+	var tableText = "<table class=\"table table-bordered>\"";
 	for(i = 0; i < totalPlayers; i++){
-		if(data[i].alive){
+		if(data[i].alive && data[myId].alive && i != myId){
 			tableText += "<tr><td>" + data[i].name +  
-			"</td><td><button onclick=\"Client.targetPlayer("+ myId + ","+ data[i].id + 
+			"</td><td><button class=\"btn btn-primary\" onclick=\"Client.targetPlayer("+ myId + ","+ data[i].id + 
 			")\">Target</button></td></tr>";
 		} else if(data[i].alive){
 			tableText += "<tr><td>" + data[i].name +  "</td><td>Alive</td></tr>";
@@ -135,12 +143,12 @@ Client.socket.on('sendnighttable', function(data){
 Client.socket.on('senddaytable', function(data){
 	currentTable = data;
 	alreadyVotedFor = -1;
-	document.getElementById("playerList").style.display = "none";
-	var tableText = "<table>";
+	
+	var tableText = "<table class=\"table table-bordered>\"";
 	for(i = 0; i < totalPlayers; i++){
-		if(data[i].alive && data[myId].alive){
+		if(data[i].alive && data[myId].alive && i != myId){
 			tableText += "<tr><td>" + data[i].name +  
-			"</td><td><button onclick=\"Client.voteAgainst("+ myId + ","+ data[i].id + 
+			"</td><td><button class=\"btn btn-primary\" onclick=\"Client.voteAgainst("+ myId + ","+ data[i].id + 
 			")\">Vote</button></td></tr>";
 		} else if(data[i].alive){
 			tableText += "<tr><td>" + data[i].name +  "</td><td>Alive</td></tr>";
@@ -155,5 +163,6 @@ Client.socket.on('senddaytable', function(data){
 });
 
 Client.socket.on('messagebroadcast', function(message){
-	document.getElementById("messageField").innerHTML += "<br>" + message;
+	document.getElementById("messageField").innerHTML = message + "<br>" 
+		+ document.getElementById("messageField").innerHTML;
 });

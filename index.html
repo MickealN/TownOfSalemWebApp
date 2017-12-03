@@ -26,13 +26,14 @@ table {
 	<script src="js/game.js" type="text/javascript"></script>
 	<!--script src="js/main.js" type="text/javascript"></script-->
 	<script src="js/client.js" type="text/javascript"></script>
-    <div class="container-fluid" id='modtools'> <!--style="display:none"-->
-		<button class="btn btn-primary" onclick="Client.startGame()">Start Game</button>
-		<button class="btn btn-primary" onclick="Client.startDay()">Start Day Cycle</button>
-		<button class="btn btn-primary" onclick="Client.startNight()">Start Night Cycle</button>
-		<button class="btn btn-primary" onclick="Client.report()">Status Report</button>
-		<br>
-	</div>
+	    <div class="container-fluid" id='modtools'> <!--style="display:none"-->
+			<button class="btn btn-primary" onclick="Client.startGame()">Start Game</button>
+			<!--button class="btn btn-primary" onclick="Client.startDay()">Start Day Cycle</button>
+			<button class="btn btn-primary" onclick="Client.startNight()">Start Night Cycle</button>
+			<button class="btn btn-primary" onclick="Client.report()">Status Report</button-->
+			<button class="btn btn-primary" onclick="Client.nextPhase()">Next Phase</button>
+			<br>
+		</div>
 	</div>
 	
 	<div id='game' class='game'>
@@ -50,15 +51,28 @@ table {
 			<br>
 			<button class="btn btn-primary" onclick="Client.askNewPlayer()">Submit</button>
 		</div>
+		
+
+		
 	</div>
 	
 	<div id='game' class='game'>
 		
-		<div class="container-fluid" id="playerList"></div>
-
-		<div class="container-fluid" id="nightTable"></div>
 		
+		<div class="container-fluid" id="playerList"></div>
+		<div class="container-fluid" id="nightTable"></div>
 		<div class="container-fluid" id="dayTable"></div>
+		
+		<div class="container-fluid" id="votingNotification"></div>
+		<div class="container-fluid" style="display:none" id="votingTable">
+			<table class="table table-bordered">
+				<tr><td>
+					<button class="btn btn-primary" onclick="Client.voteInnocent()">Innocent</button>
+					<button class="btn btn-primary" onclick="Client.voteGuilty()">Guilty</button>
+				</td></tr
+			</table>
+		</div>
+		
 		<div class="container-fluid" id="messageField"></div>
 	</div>
 

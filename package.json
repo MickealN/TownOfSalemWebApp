@@ -1,6 +1,6 @@
 {
   "name": "Town-of-Salem-WebApp",
-  "version": "0.1",
+  "version": "0.2",
   "description": "A simple implementation of the Town of Salem night phase in javascript",
   "dependencies": {
     "express": "^4.15.2",

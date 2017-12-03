@@ -4,8 +4,11 @@ var server = require('http').Server(app);
 var io = require('socket.io').listen(server);
 var Backend = require('./js/Backend');
 
-var gameRunning = false;
+Backend.gameRunning = false;
 var isNight = false; // True is night, false is day
+var voteTriggered = false;
+var ifVictim = -1;
+
 
 
 
@@ -24,6 +27,10 @@ server.listen(8081,function(){ // Listens to port 8081
 });
 
 server.lastPlayerID = 0;
+
+//Used to represent the current game state. 0 for day voting, 1 for night, 2 for status reporting 
+server.currentPhase = 0; 
+server.onTrial = -1;
 
 
 
@@ -46,33 +53,49 @@ io.on('connection', function(socket){
 	
 	//Game controls, self explanitory
 	socket.on('startgame', function(){
-		gameRunning = true;
+		Backend.gameRunning = true;
 		io.emit('gamestart');
 	});
-	
-	socket.on('startday', function(){
-		if(!gameRunning){
+
+
+	//Does the required actions and sets the phase variable to the next appropriate phase. 
+	socket.on('nextphase', function(){
+		if(!Backend.gameRunning){
+			Backend.playerList = [];
+			io.emit('endscreen', Backend.victoryLine);
+			process.exit();
 			return false;
 		}
-		io.emit('senddaytable', Backend.playerList);
-		Backend.dayCounter++;
+		switch (server.currentPhase){
+			case 0:
+				console.log("Game Phase: " + server.currentPhase);
+				io.emit('senddaytable', Backend.playerList);
+				Backend.dayCounter++;
+				server.currentPhase = 1;
+				break;
+			case 1:
+				if(voteTriggered){
+					var outcome = Backend.verdict(ifVictim);
+					console.log(outcome);
+					io.emit('messagebroadcast', outcome);
+					server.currentPhase = 2;
+					voteTriggered = false;
+					ifVictim = -1;
+					break;	
+				}
+			case 2:
+				console.log("Game Phase: " + server.currentPhase);
+				io.emit('sendnighttable', Backend.playerList);
+				server.currentPhase = 3
+				break;
+			case 3:
+				console.log("Game Phase: " + server.currentPhase);
+				console.log(Backend.report());
+				server.currentPhase = 0;
+				break;				
+		}
 	});
 	
-	socket.on('startnight', function(){
-		if(!gameRunning){
-			return false;
-		}
-		io.emit('sendnighttable', Backend.playerList);
-	});
-	
-	socket.on('report', function(){
-		if(!gameRunning){
-			return false;
-		}
-		//Process results of day/night
-		
-		console.log(Backend.report());		
-	});
 	
 	
 	socket.on('targetplayer', function(aggroId, victimId){
@@ -92,15 +115,27 @@ io.on('connection', function(socket){
 	});
 	
 	socket.on('voteagainst', function(voterId, victimId, increment){
-		Backend.voteAgainst(voterId, victimId, increment);
+		ifVictim = Backend.voteAgainst(voterId, victimId, increment);
+		if(ifVictim != -1){
+			io.emit('starttrial', Backend.playerList[ifVictim].name);
+			voteTriggered = true;
+		}
 	});
 	
 	socket.on('messagebroadcast', function(message){
 		io.emit('messagebroadcast', message);
 	});
+	
+	socket.on('voteinnocent', function(){
+		socket.player.vote = -1;
+	});
 
+	socket.on('voteguilty', function(){
+		socket.player.vote = 1;
+	});
+	
     socket.on('newplayer', function(data){
-        if(!gameRunning){
+        if(!Backend.gameRunning){
 				socket.player = {
 	            id: server.lastPlayerID++,
 	            role: data.playerRole,
@@ -110,12 +145,13 @@ io.on('connection', function(socket){
 				deathTurn: -1,				//-1 means alive
 				killer: "",
 				precedence: 0,
+				alignmnet: "",
 				targetedBy: [],
 				targetting: -1,
 				isRoleBlocked: false,
 				isHealed: 0,
 				isProtected: false,
-				
+				vote: 0,
 				votesToHang: 0
 	        };
 			Backend.setPrecedence(socket.player);

@@ -124,6 +124,7 @@ Client.socket.on('gamealreadystarted', function(data){
 Client.socket.on('gamestart', function(data){
 	document.getElementById("startScreen").style.display = "none";
 	document.getElementById("game").style.display = "inline";
+	document.getElementById("messageField").style.display = "inline";
 });
 
 Client.socket.on('endscreen', function(victoryLine){
@@ -131,7 +132,8 @@ Client.socket.on('endscreen', function(victoryLine){
 	document.getElementById("dayTable").style.display = "none";
 	document.getElementById("nightTable").style.display = "none";
 	document.getElementById("votingTable").style.display = "none";
-	document.body.innerHTML = "<h1>" + victoryLine + "</h1>";
+	document.getElementById("votingNotification").style.display = "none";
+	document.getElementById("messageField").innerHTML = "<h1>" + victoryLine + "</h1>";
 });
 
 
@@ -143,7 +145,7 @@ Client.socket.on('sendnighttable', function(data){
 	
 	var tableText = "<table class=\"table table-bordered>\"";
 	for(i = 0; i < totalPlayers; i++){
-		if(data[i].alive && data[myId].alive){
+		if(data[i].alive && data[myId].alive && data[myId].hasNightAction){
 			tableText += "<tr><td>" + data[i].name +
 			"</td><td><button class=\"btn btn-primary\" onclick=\"Client.targetPlayer("+ myId + ","+ data[i].id + 
 			")\">Target</button></td></tr>";
@@ -158,6 +160,8 @@ Client.socket.on('sendnighttable', function(data){
 	document.getElementById("nightTable").style.display = "inline";
 	document.getElementById("dayTable").style.display = "none";
 	document.getElementById("votingTable").style.display = "none";
+	document.getElementById("messageField").style.display = "inline";
+	
 });
 
 //Edit the screen to show the live players and the day action table
@@ -186,6 +190,7 @@ Client.socket.on('senddaytable', function(data){
 	document.getElementById("dayTable").style.display = "inline";
 	document.getElementById("nightTable").style.display = "none";
 	document.getElementById("votingTable").style.display = "none";
+	document.getElementById("messageField").style.display = "inline";
 });
 
 Client.socket.on('starttrial', function(victimName){
@@ -195,9 +200,16 @@ Client.socket.on('starttrial', function(victimName){
 	document.getElementById("votingTable").style.display = "inline";
 });
 
+Client.socket.on('sendreport', function(report){
+	document.getElementById("messageField").innerHTML = report + "<br>" 
+		+ document.getElementById("messageField").innerHTML;
+	document.getElementById("nightTable").style.display = "none";
+});
 
-
-
+Client.socket.on('personalmessagebroadcast', function(playerList){
+	document.getElementById("messageField").innerHTML = playerList[myId].personalMessage + "<br>" 
+		+ document.getElementById("messageField").innerHTML;
+});
 
 Client.socket.on('messagebroadcast', function(message){
 	document.getElementById("messageField").innerHTML = message + "<br>" 

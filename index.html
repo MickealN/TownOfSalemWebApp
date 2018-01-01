@@ -46,23 +46,20 @@ table {
 				<option value="townie">Townie</option>
 				<option value="werewolf">Werewolf</option>
 				<option value="doctor">Doctor</option>
+				<option value="vigilante">Vigilante</option>
 				</select>
 			</div>
 			<br>
 			<button class="btn btn-primary" onclick="Client.askNewPlayer()">Submit</button>
 		</div>
-		
-
-		
 	</div>
 	
 	<div id='game' class='game'>
 		
-		
 		<div class="container-fluid" id="playerList"></div>
 		<div class="container-fluid" id="nightTable"></div>
 		<div class="container-fluid" id="dayTable"></div>
-		
+		<div class="container-fluid" id="messageField">Messages:</div>
 		<div class="container-fluid" id="votingNotification"></div>
 		<div class="container-fluid" style="display:none" id="votingTable">
 			<table class="table table-bordered">
@@ -71,14 +68,8 @@ table {
 					<button class="btn btn-primary" onclick="Client.voteGuilty()">Guilty</button>
 				</td></tr
 			</table>
-		</div>
-		
-		<div class="container-fluid" id="messageField"></div>
+		</div>	
 	</div>
-
-
-
-	
 	
 	
 <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>

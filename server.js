@@ -68,7 +68,7 @@ io.on('connection', function(socket){
 		}
 		switch (server.currentPhase){
 			case 0:
-				console.log("Game Phase: " + server.currentPhase);
+				console.log("Day Phase");
 				io.emit('senddaytable', Backend.playerList);
 				Backend.dayCounter++;
 				server.currentPhase = 1;
@@ -84,18 +84,30 @@ io.on('connection', function(socket){
 					break;	
 				}
 			case 2:
-				console.log("Game Phase: " + server.currentPhase);
+				console.log("Night Phase");
+				if(!Backend.fullMoon()){
+					io.emit('messagebroadcast', "There is a full moon tonight!");
+				}
 				io.emit('sendnighttable', Backend.playerList);
 				server.currentPhase = 3
 				break;
 			case 3:
-				console.log("Game Phase: " + server.currentPhase);
-				console.log(Backend.report());
+				console.log("Status Report");
+				var report = Backend.report();
+				io.emit('sendreport', report);
+				personalMessageBroadcast();
+				console.log(report);
 				server.currentPhase = 0;
 				break;				
 		}
 	});
 	
+	personalMessageBroadcast = function(){
+		io.emit('personalmessagebroadcast', Backend.playerList); //Yeah that's a hacking vulnerability. Idealy only names and ID's should be passed.
+		for(i = 0; i < Backend.playerList.length; i++){
+			Backend.playerList[i].personalMessage = "";
+		}
+	};
 	
 	
 	socket.on('targetplayer', function(aggroId, victimId){
@@ -145,16 +157,20 @@ io.on('connection', function(socket){
 				deathTurn: -1,				//-1 means alive
 				killer: "",
 				precedence: 0,
+				hasNightAction: false,
 				alignmnet: "",
+				armor: 0,
+				attack: 0,
 				targetedBy: [],
 				targetting: -1,
 				isRoleBlocked: false,
 				isHealed: 0,
 				isProtected: false,
 				vote: 0,
+				personalMessage: "",
 				votesToHang: 0
 	        };
-			Backend.setPrecedence(socket.player);
+			Backend.setRoleStats(socket.player);
 			Backend.playerList.push(socket.player);
 			//console.log('New Player: 	Role-' + Backend.player.role + '\n		Name-' + 
 				//Backend.player.name + '\n		playerID-' + Backend.player.id);

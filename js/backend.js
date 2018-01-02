@@ -8,27 +8,56 @@ Backend.lethalHouses = [];
 Backend.report = "";
 Backend.innoVotes = 0;
 Backend.guiltyVotes = 0;
-Backend.totalEvil = 0;
+Backend.totalMafia = 0;
+Backend.totalWolves = 0;
 Backend.totalGood = 0;
 Backend.victoryLine = "";
 
+//TODO: Need to make it so people can't vote guilty or innocent on their own trial
+
 Backend.lowerAndCheckIfGameOver = function(victimId){
 switch(Backend.playerList[victimId].alignment){
-			case "evil":
-				Backend.totalEvil--;
-				if(Backend.totalEvil <= 0){
-					Backend.gameRunning = false;
-					Backend.victoryLine = "Town wins!";
+			case "mafia":
+				Backend.totalMafia--;
+				if(Backend.totalMafia <= 0){
+					if(Backend.totalGood <= 0){
+						Backend.gameRunning = false;
+						Backend.victoryLine = "Werewolf wins!";
+					} else if(Backend.totalWolves <= 0){
+						Backend.gameRunning = false;
+						Backend.victoryLine = "Town wins!";
+					}
 				}
 				break;
+				
+			case "werewolf":
+				Backend.totalWolves--;
+				if(Backend.totalWolves <= 0){
+					if(Backend.totalGood <= 0){
+						Backend.gameRunning = false;
+						Backend.victoryLine = "Mafia wins!";
+					} else if(Backend.totalMafia <= 0){
+						Backend.gameRunning = false;
+						Backend.victoryLine = "Town wins!";
+					}
+				}
+				break;
+				
 			case "good":
 				Backend.totalGood--;
 				if(Backend.totalGood <= 0){
-					Backend.gameRunning = false;
-					Backend.victoryLine = "Werewolf wins!";
+					
+					if(Backend.totalWolves <= 0){
+						Backend.gameRunning = false;
+						Backend.victoryLine = "Mafia wins!";
+					} else if(Backend.totalMafia <= 0){
+						Backend.gameRunning = false;
+						Backend.victoryLine = "Werewolf wins!";
+					}
 				}
 				break;
 		}
+
 	if(!Backend.gameRunning){
 		console.log(Backend.victoryLine);
 	}
@@ -49,28 +78,32 @@ Backend.verdict = function(victimId){
 	Backend.innoVotes = 0;
 	Backend.guiltyVotes = 0;
 	for(i = 0; i < Backend.playerList.length; i++){
-		switch(Backend.playerList[i].vote){
-			case 0:
-				Backend.report += Backend.playerList[i] + " has abstained!\n";
-				break;
-			case -1:
-				Backend.report += Backend.playerList[i] + " voted innocent!\n";
-				Backend.innoVotes++;
-				break;
-			case 1:
-				Backend.report += Backend.playerList[i] + " voted guilty!\n";
-				Backend.guiltyVotes++;
-				break;
-		}
-		Backend.playerList[i].vote = 0;
+		if(Backend.playerList[i].id != victimId){ //No voting on your own trial!
+			switch(Backend.playerList[i].vote){	
+				case 0:
+					Backend.report += Backend.playerList[i].name + " has abstained!\n";
+					break;
+				case -1:
+					Backend.report += Backend.playerList[i].name + " voted innocent!\n";
+					Backend.innoVotes++;
+					break;
+				case 1:
+					Backend.report += Backend.playerList[i].name + " voted guilty!\n";
+					Backend.guiltyVotes++;
+					break;
+			}
+		}	
+			Backend.playerList[i].vote = 0;
 	}
 	
 	if(Backend.guiltyVotes > Backend.innoVotes){
 		Backend.playerList[victimId].alive = false;
 		Backend.lowerAndCheckIfGameOver(victimId);
-		return (Backend.playerList[victimId].name + " was lynched after a vote of " + Backend.guiltyVotes + "  to " + Backend.innoVotes);
+		Backend.report += (Backend.playerList[victimId].name + " was lynched after a vote of " + Backend.guiltyVotes + "  to " + Backend.innoVotes);
+		return Backend.report;
 	} else {
-		return (Backend.playerList[victimId].name + " was let off the hook after a vote of " + Backend.guiltyVotes + "  to " + Backend.innoVotes);
+		Backend.report += (Backend.playerList[victimId].name + " was let off the hook after a vote of " + Backend.guiltyVotes + "  to " + Backend.innoVotes);
+		return Backend.report;
 	}	
 };
 
@@ -126,8 +159,8 @@ Backend.setRoleStats = function(player){
 	switch(player.role){
 		case "werewolf":
 			player.precedence = 2;
-			player.alignment = "evil";
-			Backend.totalEvil++;
+			player.alignment = "werewolf";
+			Backend.totalWolves++;
 			player.hasNightAction = true;
 			player.attack = 3;
 			player.armor = 3;
@@ -140,6 +173,14 @@ Backend.setRoleStats = function(player){
 			player.attack = 2;
 			player.armor = 2;
 			player.totalShots = 1;
+			break;
+		case "mafioso":
+			player.precedence = 4;
+			player.alignment = "mafia";
+			Backend.totalMafia++;
+			player.hasNightAction = true;
+			player.attack = 3;
+			player.armor = 1;
 			break;
 		case "doctor":
 			player.precedence = 7;
@@ -184,7 +225,6 @@ Backend.report = function(){
 					break;
 					
 				case "vigilante":
-					
 					if(action.victimId == action.aggroId){ //Don't yourself. You will do it.
 						break;
 					}
@@ -197,7 +237,6 @@ Backend.report = function(){
 					} else {
 						break;
 					}
-					
 					
 					if(Backend.playerList[action.victimId].armor < Backend.playerList[action.aggroId].attack){
 						Backend.playerList[action.victimId].alive = false;
@@ -215,9 +254,27 @@ Backend.report = function(){
 					
 					break;
 					
+					
+				case "mafioso":
+					
+					if(action.victimId == action.aggroId){ //Don't yourself. You will do it.
+						break;
+					}
+					if(Backend.playerList[action.victimId].armor < Backend.playerList[action.aggroId].attack){
+						Backend.playerList[action.victimId].alive = false;
+						Backend.playerList[action.victimId].deathTurn = Backend.dayCounter;
+						Backend.playerList[action.victimId].deathCause = Backend.playerList[action.victimId].name + " was killed by the mafia!"
+					} else if(Backend.playerList[action.victimId].attack > Backend.playerList[action.aggroId].armor){
+						Backend.playerList[action.aggroId].alive = false;
+						Backend.playerList[action.aggroId].deathTurn = Backend.dayCounter;
+						Backend.playerList[action.aggroId].deathCause = Backend.playerList[action.aggroId].name + " died while trying to murder someone!"
+					}
+					break;
+					
 				case "doctor":
 					if(Backend.playerList[action.victimId].deathTurn == Backend.dayCounter){
 						Backend.playerList[action.victimId].alive = true;
+						Backend.playerList[action.victimId].healed = true;
 						Backend.playerList[action.victimId].deathCause += " But they were brought back by the doctor!";
 					}
 					break;
@@ -240,10 +297,17 @@ Backend.report = function(){
 		Backend.playerList[i].targetting = -1;
 		if(Backend.playerList[i].deathTurn == Backend.dayCounter){
 			if(Backend.playerList[i].alive == true){ //This is a case for the vig commiting suicide one turn later.
-				Backend.playerList[i].alive = false;
+				if(Backend.playerList[i].healed){ //This is to display they were healed, then set it to false (otherwise would grant an immunity
+					Backend.playerList[i].healed = false;
+				} else { //The player was not healed, but were alive with a deathturn event, meaning they committed suicide
+					Backend.playerList[i].alive = false;
+					Backend.lowerAndCheckIfGameOver(i);
+				}
+			} else {
+				Backend.lowerAndCheckIfGameOver(i);
 			}
 			reportText += Backend.playerList[i].deathCause + "\n";
-			Backend.lowerAndCheckIfGameOver(i);
+			
 		}
 	}
 	Backend.lethalHouses = [];
